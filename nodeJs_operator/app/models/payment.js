@@ -23,8 +23,8 @@ const PaymentSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["paid", "unpaid"],
-      default: "paid",
+      enum: ["pending", "completed", "cancelled"],
+      default: "completed",
     },
 
     paidAt: {

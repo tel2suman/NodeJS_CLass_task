@@ -30,8 +30,9 @@ const BlogSchema = new Schema(
     },
 
     status: {
-      type: Boolean,
-      default: true,
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
 
     createdOn: {

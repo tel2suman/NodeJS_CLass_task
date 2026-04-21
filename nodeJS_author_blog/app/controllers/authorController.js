@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 
+const crypto = require("crypto");
+
 const StatusCode = require("../utils/StatusCode");
 
 class AuthorController {
@@ -12,7 +14,7 @@ class AuthorController {
   async createAuthor(req, res) {
 
     try {
-      const { name, email, password, about } = req.body;
+      const { name, email, password, about, role } = req.body;
 
       if (!name || !email || !password || !about) {
         return res.status(StatusCode.BAD_REQUEST).json({
@@ -39,6 +41,7 @@ class AuthorController {
         email,
         password: hashedpassword,
         about,
+        role,
       });
 
       const data = await authordata.save();
@@ -85,6 +88,9 @@ class AuthorController {
         });
       }
 
+      // Generating 32 random bytes (256-bit) and converting to hex
+      const secretKey = crypto.randomBytes(32).toString("hex");
+
       if (user) {
         const token = jwt.sign(
           {
@@ -109,15 +115,14 @@ class AuthorController {
             password: user.password,
           },
           token: token,
+          key: secretKey
         });
-
       } else {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
           message: "user not found",
         });
       }
-
     } catch (error) {
 
       return res.status(StatusCode.SERVER_ERROR).json({

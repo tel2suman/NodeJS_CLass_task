@@ -33,8 +33,8 @@ const AuthorSchema = new Schema(
 
     role: {
       type: String,
-      enum: ["reader", "vlogger", "creator"],
-      default: "reader",
+      enum: ["admin", "author", "user"],
+      default: "author",
     },
 
     is_verified: {
