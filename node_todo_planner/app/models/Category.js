@@ -30,6 +30,12 @@ const categorySchema = new Schema(
       required: true,
     },
 
+    labelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Label",
+      required: true,
+    },
+
     createOn: {
       type: Date,
       default: new Date(),

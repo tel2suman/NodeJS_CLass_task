@@ -19,7 +19,7 @@ router.put(
 );
 
 router.get(
-  "/view-task",
+  "/task-summary",
   TaskController.listTasks,
 );
 
@@ -28,5 +28,6 @@ router.delete(
   TaskController.deleteTask,
 );
 
+router.get("/task-insights", TaskController.getTaskStatictics);
 
 module.exports = router;

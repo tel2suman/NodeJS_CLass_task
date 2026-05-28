@@ -8,7 +8,7 @@ class CategoryController {
 
         try {
 
-            const { categoryName, categoryDescription, taskId, userId } = req.body;
+            const { categoryName, categoryDescription, taskId, userId, labelId } = req.body;
 
             if (!categoryName) {
                 return res.status(StatusCode.BAD_REQUEST).json({
@@ -31,6 +31,7 @@ class CategoryController {
               categoryDescription,
               taskId,
               userId,
+              labelId,
             });
 
             return res.status(StatusCode.SUCCESS).json({

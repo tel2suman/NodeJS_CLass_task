@@ -6,6 +6,7 @@ const Task = require("../models/Task");
 
 const StatusCode = require("../utils/StatusCode");
 
+const mongoose = require("mongoose");
 
 class LabelController {
 
@@ -60,38 +61,36 @@ class LabelController {
         const lookupQuery = [
           {
             $match: {
-              userId: req.user.userId,
+              userId: new mongoose.Types.ObjectId(req.user._id)
             },
           },
 
           {
             $lookup: {
-              from: "labels",
-              localField: "_id",
-              foreignField: "categoryId",
-              as: "labels",
+              from: "categories",
+              localField: "categoryId",
+              foreignField: "_id",
+              as: "category",
+            },
+          },
+
+          {
+            $unwind: {
+              path: "$category",
+              preserveNullAndEmptyArrays: true,
             },
           },
 
           {
             $project: {
               _id: 1,
-              categoryName: 1,
-              categoryDescription: 1,
+              labelName: 1,
+              labelDesc: 1,
               createdAt: 1,
 
-              labels: {
-                $map: {
-                  input: "$labels",
-                  as: "label",
-                  in: {
-                    _id: "$$label._id",
-                    labelName: "$$label.labelName",
-                    labelDesc: "$$label.labelDesc",
-                    createdAt: "$$label.createdAt",
-                  },
-                },
-              },
+              "category._id": 1,
+              "category.categoryName": 1,
+              "category.categoryDescription": 1,
             },
           },
 
@@ -102,13 +101,13 @@ class LabelController {
           },
         ];
 
-        const categories = await Category.aggregate(lookupQuery);
+        const labels = await Label.aggregate(lookupQuery);
 
         return res.status(StatusCode.SUCCESS).json({
           success: true,
           message: "List of categories with labels",
-          totalCategories: categories.length,
-          data: categories,
+          totalLabels: labels.length,
+          data: labels,
         });
 
     } catch (error) {

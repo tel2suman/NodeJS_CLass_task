@@ -18,8 +18,5 @@ router.put("/update-reminder/:reminderId", ReminderController.updateReminder);
 
 router.delete("/delete-reminder/:reminderId", ReminderController.deleteReminder);
 
-router.get("/task-summary", ReminderController.getTaskSummary);
-
-router.get("/task-insights", ReminderController.getTaskInsights);
 
 module.exports = router;

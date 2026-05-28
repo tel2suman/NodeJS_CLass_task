@@ -201,7 +201,7 @@ class UserController {
       if (user) {
         const token = jwt.sign(
           {
-            id: user._id,
+            _id: user._id,
             name: user.name,
             email: user.email,
             phone: user.phone,
@@ -214,7 +214,7 @@ class UserController {
           success: true,
           message: "user login successfull!!",
           data: {
-            id: user._id,
+            _id: user._id,
             name: user.name,
             email: user.email,
             phone: user.phone,

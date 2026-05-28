@@ -48,6 +48,10 @@ const TaskSchema = new Schema(
       ref: "Label",
     },
 
+    completedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
