@@ -67,6 +67,14 @@ app.use(
   }),
 );
 
+// Default Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Ticket booking API Running Successfully",
+  });
+});
+
 //define routes
 app.use(require('./app/routes/index'))
 
