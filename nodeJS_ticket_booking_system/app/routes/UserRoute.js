@@ -14,7 +14,7 @@ router.post("/verify-user", UserController.verifyUser);
 
 router.post("/login-user", UserController.loginUser);
 
-router.use(authChek);
+//router.use(authChek);
 
 router.get("/user-profile/:id", UserController.getUserProfile);
 
