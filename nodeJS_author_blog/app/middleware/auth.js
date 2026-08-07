@@ -7,12 +7,12 @@ const authCheck = async (req, res, next) => {
 
   const token = req.headers.authorization?.split(" ")[1];
 
-  const secretKey = req.headers["x-api-key"];
+  const apiKey = req.headers["x-api-key"];
 
-  if (!token || !secretKey) {
+  if (!token || !apiKey) {
     return res.status(StatusCode.NOT_FOUND).json({
       status: false,
-      message: "Token & Secret key is required for access this page",
+      message: "Token & Api key is required for access this page",
     });
   }
 

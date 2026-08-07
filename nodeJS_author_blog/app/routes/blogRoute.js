@@ -11,34 +11,52 @@ const Rolechek = require("../middleware/roleCheck");
 const router = express.Router();
 
 
-router.post(
-  "/create-blog", authCheck,
-  Rolechek("author","admin"),
+// router.post(
+//   "/create-blog", authCheck,
+//   Rolechek("author","admin"),
+//   Upload.single("image"),
+//   blogController.createBlog,
+// );
+
+// router.get(
+//   "/view/all-blogs",
+//   authCheck,
+//   Rolechek("author","admin"),
+//   blogController.viewAllBlog,
+// );
+
+// router.put(
+//   "/update/blog/:blogId",
+//   authCheck,
+//   Rolechek("author","admin"),
+//   Upload.single("image"), // multer
+//   blogController.updateBlog,
+// );
+
+// router.delete(
+//   "/delete/blog/:blogId",
+//   authCheck,
+//   Rolechek("author","admin"),
+//   blogController.deleteBlog,
+// );
+
+// single endpoint blog crud route
+
+router.all(
+  "/blog", authCheck,
+  Rolechek("author", "admin"),
   Upload.single("image"),
-  blogController.createBlog,
+  blogController.blogOperations,
 );
 
-router.get(
-  "/view/all-blogs",
-  authCheck,
-  Rolechek("author","admin"),
-  blogController.viewAllBlog,
-);
-
-router.put(
-  "/update/blog/:blogId",
-  authCheck,
-  Rolechek("author","admin"),
+router.all(
+  "/blog/:blogId", authCheck,
+  Rolechek("author", "admin"),
   Upload.single("image"), // multer
-  blogController.updateBlog,
+  blogController.blogOperations,
 );
 
-router.delete(
-  "/delete/blog/:blogId",
-  authCheck,
-  Rolechek("author","admin"),
-  blogController.deleteBlog,
-);
+// end of single endpoint
 
 router.get(
   "/author/all/blogs",
@@ -57,30 +75,39 @@ router.get(
 router.post(
   "/comment/add",
   authCheck,
-  Rolechek("author","admin"),
+  Rolechek("user"),
   blogController.addComment,
 );
 
 router.get(
   "/comment/blog/:blogId",
   authCheck,
-  Rolechek("author","admin"),
+  Rolechek("user"),
   blogController.getCommentsByBlog,
 );
 
 router.post(
   "/like/add",
   authCheck,
-  Rolechek("author","admin"),
+  Rolechek("user"),
   blogController.toggleLike,
 );
 
 router.get(
   "/all/like",
   authCheck,
-  Rolechek("author","admin"),
+  Rolechek("user"),
   blogController.getLikesCountByBlog,
 );
+
+router.put("/blog/approve/:blogId", authCheck, Rolechek("admin"), blogController.approveBlog);
+
+router.put("/blog/reject/:blogId", authCheck, Rolechek("admin"), blogController.rejectBlog);
+
+router.get("/blog/by/category", authCheck, Rolechek("admin"), blogController.getBlogsByCategory);
+
+router.get("/all/published/blogs", authCheck, Rolechek("user"), blogController.getApprovedBlogs)
+
 
 module.exports = router;
 

@@ -13,64 +13,192 @@ const Comment = require("../models/comment");
 const Like = require("../models/like");
 
 class BlogController {
-  async createBlog(req, res) {
+
+  async blogOperations(req, res) {
+
     try {
-      const { title, content, authorId } = req.body;
 
-      //validate all fields
-      if (!title || !content || !authorId) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: "all fields are required",
-        });
+      const method = req.method;
+
+      switch (method) {
+
+        //POST → create
+        case "POST": {
+          const { title, content, authorId, categoryId } = req.body;
+
+          //validate all fields
+          if (!title || !content || !authorId || !categoryId) {
+            return res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "all fields are required",
+            });
+          }
+
+          if (!req.file) {
+            return res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "Image is required",
+            });
+          }
+
+          const existPost = await Blog.findOne({ title });
+
+          if (existPost) {
+            return res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "blog already exist",
+            });
+          }
+
+          //upload to clodinary
+          const imageResult = await cloudinary.uploader.upload(req.file.path, {
+            folder: "uploads",
+            width: 500,
+            height: 500,
+            crop: "limit",
+            quality: "auto",
+          });
+
+          // Delete local file after upload (important)
+          if (req.file && req.file.path) {
+            await fs.promises.unlink(req.file.path);
+          }
+
+          const blogdata = new Blog({
+            title,
+            content,
+            image: imageResult ? imageResult.secure_url : null,
+            cloudinary_id: imageResult ? imageResult.public_id : null,
+            authorId,
+            categoryId,
+          });
+
+          const data = await blogdata.save();
+
+          // Your record creation logic here
+          return res.status(StatusCode.SUCCESS).json({
+            success: true,
+            message: "Blog created successfully.",
+            data: data,
+          });
+        }
+
+        //GET → get all blogs
+        case "GET": {
+
+          const data = await Blog.find();
+
+          return res.status(StatusCode.SUCCESS).json({
+            success: true,
+            message: "blog listing is here",
+            total: data.length,
+            data: data,
+          });
+        }
+
+        //PUT → update
+        case "PUT": {
+          const { blogId } = req.params;
+
+          const { title, content } = req.body;
+
+          const blog = await Blog.findById(blogId);
+
+          if (!blog) {
+            return res.status(StatusCode.NOT_FOUND).json({
+              success: false,
+              message: "Blog not found",
+            });
+          }
+
+          // 🔐 Ownership check
+          if (blog.authorId !== req.user.id) {
+            return res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "You are not allowed to update this blog",
+            });
+          }
+
+          // 🖼️ If new image uploaded
+          if (req.file) {
+            // ✅ Delete old image from Cloudinary
+            if (blog.cloudinary_id) {
+              await cloudinary.uploader.destroy(blog.cloudinary_id);
+            }
+
+            // ✅ Upload new image
+            const result = await cloudinary.uploader.upload(req.file.path, {
+              folder: "uploads",
+              width: 500,
+              height: 500,
+              crop: "limit",
+              quality: "auto",
+            });
+
+            // ✅ Remove local file
+            if (req.file.path) {
+              await fs.promises.unlink(req.file.path);
+            }
+
+            // ✅ Update image fields
+            blog.image = result.secure_url;
+            blog.cloudinary_id = result.public_id;
+          }
+
+          // 📝 Update text fields
+          if (title) blog.title = title;
+
+          if (content) blog.content = content;
+
+          await blog.save();
+
+          return res.status(StatusCode.SUCCESS).json({
+            success: true,
+            message: "Blog updated successfully",
+            data: blog,
+          });
+        }
+
+        //DELETE → delete
+        case "DELETE": {
+          const { blogId } = req.params;
+
+          const blog = await Blog.findById(blogId);
+
+          if (!blog) {
+            return res.status(404).json({
+              success: false,
+              message: "Blog not found",
+            });
+          }
+
+          // 🔐 Ownership check
+          if (blog.authorId !== req.user.id) {
+            return res.status(403).json({
+              success: false,
+              message: "You are not allowed to delete this blog",
+            });
+          }
+
+          // 🖼️ Delete image from Cloudinary (safe)
+          if (blog.cloudinary_id) {
+            try {
+              await cloudinary.uploader.destroy(blog.cloudinary_id);
+            } catch (err) {
+              console.log("Cloudinary delete failed:", err.message);
+              // ❗ don't stop execution
+            }
+          }
+
+          // 🗑️ Delete blog
+          await Blog.findByIdAndDelete(blogId);
+
+          return res.status(StatusCode.SUCCESS).json({
+            success: true,
+            message: "Blog and image deleted successfully",
+          });
+        }
       }
-
-      if (!req.file) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: "Image is required",
-        });
-      }
-
-      const existPost = await Blog.findOne({ title });
-
-      if (existPost) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: "blog already exist",
-        });
-      }
-
-      //upload to clodinary
-      const imageResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "uploads",
-        width: 500,
-        height: 500,
-        crop: "limit",
-        quality: "auto",
-      });
-
-      // Delete local file after upload (important)
-      if (req.file && req.file.path) {
-        await fs.promises.unlink(req.file.path);
-      }
-
-      const blogdata = new Blog({
-        title,
-        content,
-        image: imageResult ? imageResult.secure_url : null,
-        cloudinary_id: imageResult ? imageResult.public_id : null,
-        authorId,
-      });
-
-      const data = await blogdata.save();
-
-      // Your record creation logic here
-      return res.status(StatusCode.SUCCESS).json({
-        success: true,
-        message: "Blog created successfully.",
-        data: data,
-      });
     } catch (error) {
       return res.status(StatusCode.SERVER_ERROR).json({
         success: false,
@@ -78,147 +206,201 @@ class BlogController {
       });
     }
   }
+
+  // async createBlog(req, res) {
+
+  //   try {
+
+  //     const { title, content, authorId, categoryId } = req.body;
+
+  //     if (!title || !content || !authorId ||!categoryId) {
+  //       return res.status(StatusCode.BAD_REQUEST).json({
+  //         success: false,
+  //         message: "all fields are required",
+  //       });
+  //     }
+
+  //     if (!req.file) {
+  //       return res.status(StatusCode.BAD_REQUEST).json({
+  //         success: false,
+  //         message: "Image is required",
+  //       });
+  //     }
+
+  //     const existPost = await Blog.findOne({ title });
+
+  //     if (existPost) {
+  //       return res.status(StatusCode.BAD_REQUEST).json({
+  //         success: false,
+  //         message: "blog already exist",
+  //       });
+  //     }
+
+  //     const imageResult = await cloudinary.uploader.upload(req.file.path, {
+  //       folder: "uploads",
+  //       width: 500,
+  //       height: 500,
+  //       crop: "limit",
+  //       quality: "auto",
+  //     });
+
+  //     if (req.file && req.file.path) {
+  //       await fs.promises.unlink(req.file.path);
+  //     }
+
+  //     const blogdata = new Blog({
+  //       title,
+  //       content,
+  //       image: imageResult ? imageResult.secure_url : null,
+  //       cloudinary_id: imageResult ? imageResult.public_id : null,
+  //       authorId,
+  //       categoryId,
+  //     });
+
+  //     const data = await blogdata.save();
+
+  //     return res.status(StatusCode.SUCCESS).json({
+  //       success: true,
+  //       message: "Blog created successfully.",
+  //       data: data,
+  //     });
+
+  //   } catch (error) {
+  //     return res.status(StatusCode.SERVER_ERROR).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
+
 
   //view record
-  async viewAllBlog(req, res) {
-    try {
-      const data = await Blog.find();
+  // async viewAllBlog(req, res) {
+  //   try {
+  //     const data = await Blog.find();
 
-      return res.status(StatusCode.SUCCESS).json({
-        success: true,
-        message: "blog listing is here",
-        total: data.length,
-        data: data,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
+  //     return res.status(StatusCode.SUCCESS).json({
+  //       success: true,
+  //       message: "blog listing is here",
+  //       total: data.length,
+  //       data: data,
+  //     });
+  //   } catch (error) {
+  //     return res.status(500).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
 
   // update blog
-  async updateBlog(req, res) {
+  // async updateBlog(req, res) {
+  //   try {
+  //     const { blogId } = req.params;
 
-    try {
-      const { blogId } = req.params;
+  //     const { title, content } = req.body;
 
-      const { title, content } = req.body;
+  //     const blog = await Blog.findById(blogId);
 
-      const blog = await Blog.findById(blogId);
+  //     if (!blog) {
+  //       return res.status(StatusCode.NOT_FOUND).json({
+  //         success: false,
+  //         message: "Blog not found",
+  //       });
+  //     }
 
-      if (!blog) {
-        return res.status(StatusCode.NOT_FOUND).json({
-          success: false,
-          message: "Blog not found",
-        });
-      }
 
-      // 🔐 Ownership check
-      if (blog.authorId !== req.user.id) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: "You are not allowed to update this blog",
-        });
-      }
+  //     if (blog.authorId !== req.user.id) {
+  //       return res.status(StatusCode.BAD_REQUEST).json({
+  //         success: false,
+  //         message: "You are not allowed to update this blog",
+  //       });
+  //     }
 
-      // 🖼️ If new image uploaded
-      if (req.file) {
-        // ✅ Delete old image from Cloudinary
-        if (blog.cloudinary_id) {
-          await cloudinary.uploader.destroy(blog.cloudinary_id);
-        }
+  //     if (req.file) {
+  //       // ✅ Delete old image from Cloudinary
+  //       if (blog.cloudinary_id) {
+  //         await cloudinary.uploader.destroy(blog.cloudinary_id);
+  //       }
 
-        // ✅ Upload new image
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "uploads",
-          width: 500,
-          height: 500,
-          crop: "limit",
-          quality: "auto",
-        });
+  //       const result = await cloudinary.uploader.upload(req.file.path, {
+  //         folder: "uploads",
+  //         width: 500,
+  //         height: 500,
+  //         crop: "limit",
+  //         quality: "auto",
+  //       });
 
-        // ✅ Remove local file
-        if (req.file.path) {
-          await fs.promises.unlink(req.file.path);
-        }
+  //       if (req.file.path) {
+  //         await fs.promises.unlink(req.file.path);
+  //       }
 
-        // ✅ Update image fields
-        blog.image = result.secure_url;
-        blog.cloudinary_id = result.public_id;
-      }
+  //       blog.image = result.secure_url;
+  //       blog.cloudinary_id = result.public_id;
+  //     }
 
-      // 📝 Update text fields
-      if (title) blog.title = title;
+  //     if (title) blog.title = title;
 
-      if (content) blog.content = content;
+  //     if (content) blog.content = content;
 
-      await blog.save();
+  //     await blog.save();
 
-      return res.status(StatusCode.SUCCESS).json({
-        success: true,
-        message: "Blog updated successfully",
-        data: blog,
-      });
-
-    } catch (error) {
-      return res.status(StatusCode.SERVER_ERROR).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
+  //     return res.status(StatusCode.SUCCESS).json({
+  //       success: true,
+  //       message: "Blog updated successfully",
+  //       data: blog,
+  //     });
+  //   } catch (error) {
+  //     return res.status(StatusCode.SERVER_ERROR).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
 
   //delete blog
-  async deleteBlog(req, res) {
+  // async deleteBlog(req, res) {
+  //   try {
+  //     const { blogId } = req.params;
 
-    try {
-      const { blogId } = req.params;
+  //     const blog = await Blog.findById(blogId);
 
-      const blog = await Blog.findById(blogId);
+  //     if (!blog) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Blog not found",
+  //       });
+  //     }
 
-      if (!blog) {
-        return res.status(404).json({
-          success: false,
-          message: "Blog not found",
-        });
-      }
+  //     if (blog.authorId !== req.user.id) {
+  //       return res.status(403).json({
+  //         success: false,
+  //         message: "You are not allowed to delete this blog",
+  //       });
+  //     }
 
-      // 🔐 Ownership check
-      if (blog.authorId !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: "You are not allowed to delete this blog",
-        });
-      }
+  //     if (blog.cloudinary_id) {
+  //       try {
+  //         await cloudinary.uploader.destroy(blog.cloudinary_id);
+  //       } catch (err) {
+  //         console.log("Cloudinary delete failed:", err.message);
+  //       }
+  //     }
 
-      // 🖼️ Delete image from Cloudinary (safe)
-      if (blog.cloudinary_id) {
-        try {
-          await cloudinary.uploader.destroy(blog.cloudinary_id);
-        } catch (err) {
-          console.log("Cloudinary delete failed:", err.message);
-          // ❗ don't stop execution
-        }
-      }
 
-      // 🗑️ Delete blog
-      await Blog.findByIdAndDelete(blogId);
+  //     await Blog.findByIdAndDelete(blogId);
 
-      return res.status(StatusCode.SUCCESS).json({
-        success: true,
-        message: "Blog and image deleted successfully",
-      });
-    } catch (error) {
-      
-      return res.status(StatusCode.SERVER_ERROR).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-
+  //     return res.status(StatusCode.SUCCESS).json({
+  //       success: true,
+  //       message: "Blog and image deleted successfully",
+  //     });
+  //   } catch (error) {
+  //     return res.status(StatusCode.SERVER_ERROR).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
 
   async searchBlogsByAuthorName(req, res) {
     try {
@@ -365,9 +547,7 @@ class BlogController {
   }
 
   async getCommentsByBlog(req, res) {
-
     try {
-
       const { blogId } = req.params;
 
       const lookupQuery = [
@@ -408,9 +588,7 @@ class BlogController {
         total: data.length,
         data,
       });
-
     } catch (error) {
-
       return res.status(StatusCode.SERVER_ERROR).json({
         success: false,
         message: error.message,
@@ -419,7 +597,6 @@ class BlogController {
   }
 
   async toggleLike(req, res) {
-
     try {
       const { blogId } = req.body;
 
@@ -432,27 +609,24 @@ class BlogController {
         });
       }
 
-       const existingLike = await Like.findOne({ blogId, authorId });
+      const existingLike = await Like.findOne({ blogId, authorId });
 
-        if (existingLike) {
+      if (existingLike) {
+        await Like.deleteOne({ _id: existingLike._id });
 
-          await Like.deleteOne({ _id: existingLike._id });
-
-            return res.status(StatusCode.SUCCESS).json({
-              success: true,
-              message: "Blog unliked",
-            });
-        }
-
-        await Like.create({ blogId, authorId });
-
-        return res.status(StatusCode.BAD_REQUEST).json({
+        return res.status(StatusCode.SUCCESS).json({
           success: true,
-          message: "Blog liked",
+          message: "Blog unliked",
         });
+      }
 
+      await Like.create({ blogId, authorId });
+
+      return res.status(StatusCode.SUCCESS).json({
+        success: true,
+        message: "Blog liked",
+      });
     } catch (error) {
-
       return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: error.message,
@@ -461,9 +635,7 @@ class BlogController {
   }
 
   async getLikesCountByBlog(req, res) {
-
     try {
-
       const lookupQuery = [
         {
           $lookup: {
@@ -494,9 +666,231 @@ class BlogController {
         total: data.length,
         data,
       });
-
     } catch (error) {
       return res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async approveBlog(req, res) {
+
+    try {
+
+      const { blogId } = req.params;
+
+      const blog = await Blog.findById(blogId);
+
+      if (!blog) {
+        return res.status(StatusCode.NOT_FOUND).json({
+          success: false,
+          message: "Blog not found",
+        });
+      }
+
+      blog.status = "approved";
+
+      await blog.save();
+
+      return res.status(StatusCode.SUCCESS).json({
+        success: true,
+        message: "Blog approved successfully",
+        data: blog,
+      });
+    } catch (error) {
+      return res.status(StatusCode.SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async rejectBlog(req, res) {
+
+    try {
+
+      const { blogId } = req.params;
+
+      const blog = await Blog.findById(blogId);
+
+      if (!blog) {
+        return res.status(StatusCode.NOT_FOUND).json({
+          success: false,
+          message: "Blog not found",
+        });
+      }
+
+      blog.status = "rejected";
+
+      await blog.save();
+
+      return res.status(StatusCode.SUCCESS).json({
+        success: true,
+        message: "Blog rejected",
+        data: blog,
+      });
+
+    } catch (error) {
+      return res.status(StatusCode.SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async getBlogsByCategory(req, res) {
+
+    try {
+
+      const lookupQuery = [
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        { $unwind: "$category" },
+        {
+          $group: { _id: "$categoryId",
+            total: { $sum: 1 } },
+        },
+      ];
+
+      const result = await Blog.aggregate(lookupQuery);
+
+      return res.status(StatusCode.SUCCESS).json({
+        message: "Blogs fetched by category",
+        data: result,
+      });
+
+    } catch (error) {
+      return res.status(StatusCode.SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async getApprovedBlogs(req, res) {
+
+    try {
+
+      const lookupQuery = [
+        // ✅ Only approved blogs
+        {
+          $match: { status: "approved" },
+        },
+
+        // 👤 Author details
+        {
+          $lookup: {
+            from: "authors",
+            localField: "authorId",
+            foreignField: "_id",
+            as: "author",
+          },
+        },
+        { $unwind: "$author" },
+        // 📂 Category
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        { $unwind: "$category" },
+        // ❤️ Likes
+        {
+          $lookup: {
+            from: "likes",
+            localField: "_id",
+            foreignField: "blogId",
+            as: "likes",
+          },
+        },
+        {
+          $addFields: {
+            likeCount: { $size: "$likes" },
+          },
+        },
+        // 💬 Comments
+        {
+          $lookup: {
+            from: "comments",
+            localField: "_id",
+            foreignField: "blogId",
+            as: "comments",
+          },
+        },
+        // 👤 Comment author details
+        {
+          $lookup: {
+            from: "authors",
+            localField: "comments.authorId",
+            foreignField: "_id",
+            as: "commentAuthors",
+          },
+        },
+        // 🔄 Merge comment + author
+        {
+          $addFields: {
+            comments: {
+              $map: {
+                input: "$comments",
+                as: "c",
+                in: {
+                  comment: "$$c.comment",
+                  createdAt: "$$c.createdAt",
+                  author: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: "$commentAuthors",
+                          as: "a",
+                          cond: { $eq: ["$$a._id", "$$c.authorId"] },
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        // 🧹 Clean output
+        {
+          $project: {
+            title: 1,
+            content: 1,
+            image: 1,
+            createdOn: 1,
+            likeCount: 1,
+            comments: 1,
+            "author.name": 1,
+            "category.name": 1,
+          },
+        },
+        {
+          $sort: { createdOn: -1 },
+        },
+      ];
+
+      const data = await Blog.aggregate(lookupQuery);
+
+        return res.status(StatusCode.SUCCESS).json({
+          success: true,
+          total: data.length,
+          data,
+        });
+
+    } catch (error) {
+      return res.status(StatusCode.SERVER_ERROR).json({
         success: false,
         message: error.message,
       });

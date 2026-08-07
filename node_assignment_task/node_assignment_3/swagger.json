@@ -1,0 +1,47 @@
+{
+    "swaggerDefinition": {
+        "info": {
+            "title": "Product API",
+            "version": "1.0.0",
+            "description": "Product API documentation create by Suman",
+            "contact": {
+                "name": "Suman Bhattacharjee"
+            },
+            "servers": [
+                "http://localhost:5500"
+            ]
+        },
+        "tags": [
+            {
+                "name": "Category",
+                "description": "Category CRUD API"
+            },
+            {
+                "name": "Product",
+                "description": "Product CRUD API"
+            },
+            {
+                "name": "User",
+                "description": "User CRUD API"
+            }
+        ],
+        "schemes": "['http', 'https']",
+        "securityDefinitions": {
+            "bearerAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Bearer token needed to access this API"
+            }
+        },
+        "security": [
+            {
+                "bearerAuth": []
+            }
+        ]
+    },
+    "apis": [
+        "app.js",
+        "./app/routes/*.js"
+    ]
+}

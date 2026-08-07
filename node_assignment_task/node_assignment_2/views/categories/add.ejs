@@ -1,0 +1,53 @@
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Add Category / Subcategory</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="/categories/add" method="POST" id="catForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Type</label>
+                        <select name="type" class="form-select bg-transparent" id="typeSelect" required>
+                            <option value="category">Category</option>
+                            <option value="subcategory">Subcategory</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Name</label>
+                        <input type="text" name="name" class="form-control bg-transparent" placeholder="Electronics, Mobile, etc." required>
+                    </div>
+
+                    <div class="mb-4 d-none" id="parentDiv">
+                        <label class="form-label small fw-bold">Parent Category</label>
+                        <select name="parentId" class="form-select bg-transparent">
+                            <option value="">Select Category</option>
+                            <% categories.forEach(cat => { %>
+                                <option value="<%= cat._id %>"><%= cat.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <a href="/categories" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('typeSelect').addEventListener('change', function() {
+        const parentDiv = document.getElementById('parentDiv');
+        if (this.value === 'subcategory') {
+            parentDiv.classList.remove('d-none');
+            parentDiv.querySelector('select').setAttribute('required', 'required');
+        } else {
+            parentDiv.classList.add('d-none');
+            parentDiv.querySelector('select').removeAttribute('required');
+        }
+    });
+</script>

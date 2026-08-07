@@ -1,0 +1,39 @@
+<div class="container d-flex align-items-center justify-content-center vh-100">
+    <div class="card p-4 shadow-lg border-0" style="max-width: 400px; width: 100%;">
+        <div class="text-center mb-4">
+            <div class="display-4 text-info mb-2"><i class="fas fa-cube"></i></div>
+            <h3 class="fw-bold">Welcome Back</h3>
+            <p class="text-muted small">Enter your credentials to access the portal</p>
+        </div>
+
+        <form action="/auth/login" method="POST">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    <input type="email" name="email" class="form-control bg-transparent border-start-0" placeholder="admin@example.com" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" name="password" class="form-control bg-transparent border-start-0" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                Sign In
+            </button>
+            
+            <div class="text-center">
+                <small class="text-muted">Role: Super Admin / User</small>
+            </div>
+        </form>
+    </div>
+</div>

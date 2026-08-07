@@ -18,6 +18,10 @@ router.use(authChek);
 
 router.get("/user-profile/:id", UserController.getUserProfile);
 
-router.put("/update-profile/:id", UserController.updateUser);
+router.put(
+  "/update-profile/:id",
+  Upload.single("image"),
+  UserController.updateUser,
+);
 
 module.exports = router;

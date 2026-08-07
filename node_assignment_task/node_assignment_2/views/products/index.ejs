@@ -1,0 +1,45 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Product Catalog</h4>
+    <a href="/products/add" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add Product</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th>Price</th>
+                        <th class="pe-4 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% products.forEach(p => { %>
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="/uploads/products/<%= p.image %>" class="rounded me-3" width="50" height="50" style="object-fit: cover;">
+                                    <div class="fw-bold"><%= p.name %></div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-primary bg-opacity-10 text-primary"><%= p.categoryName %></span></td>
+                            <td><span class="badge bg-warning bg-opacity-10 text-warning"><%= p.subcategoryName %></span></td>
+                            <td class="fw-bold text-info">$<%= p.price.toFixed(2) %></td>
+                            <td class="pe-4 text-end">
+                                <a href="/products/delete/<%= p._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this product?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                    <% if(products.length === 0) { %>
+                        <tr><td colspan="5" class="text-center p-4 text-muted">No products found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

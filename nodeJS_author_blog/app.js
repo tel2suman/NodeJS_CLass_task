@@ -17,10 +17,20 @@ const helmet = require("helmet");
 
 const session = require("express-session");
 
+const flash = require("connect-flash");
+
+const rateLimit = require("./app/utils/limiter");
+
 //database connection
 const DatabaseConnection = require("./app/config/dbconn");
 
 DatabaseConnection();
+
+// ejs template engine
+const ejs = require("ejs");
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
 
 app.use(cors());
 
@@ -37,6 +47,9 @@ app.use(
 app.use(express.static(path.join(__dirname,'public')));
 app.use("uploads", express.static(path.join(__dirname, "/uploads")));
 app.use("/uploads", express.static("uploads"));
+
+// Apply the rate limiting middleware to all requests.
+app.use(rateLimit);
 
 //define json
 app.use(express.json());
@@ -57,6 +70,16 @@ app.use(
     },
   }),
 );
+
+// 2. Flash Configuration
+app.use(flash());
+
+// This makes 'success_msg' available in all your views automatically
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash('success_msg');
+  res.locals.error_msg = req.flash('error_msg');
+  next();
+});
 
 //defining routes
 app.use(require("./app/routes/index"));

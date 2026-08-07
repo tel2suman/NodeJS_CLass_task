@@ -1,0 +1,38 @@
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Create New User</h5>
+                <p class="text-muted small">Credentials will be sent to the user's email automatically.</p>
+            </div>
+            <div class="card-body p-4">
+                <form action="/users/add" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Full Name</label>
+                        <input type="text" name="name" class="form-control bg-transparent" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Email Address</label>
+                        <input type="email" name="email" class="form-control bg-transparent" placeholder="john@example.com" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Assign Role</label>
+                        <select name="roleId" class="form-select bg-transparent" required>
+                            <option value="">Select Role</option>
+                            <% roles.forEach(role => { %>
+                                <option value="<%= role._id %>"><%= role.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Create & Send Credentials</button>
+                        <a href="/users" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

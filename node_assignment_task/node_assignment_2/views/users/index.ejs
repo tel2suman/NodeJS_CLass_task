@@ -1,0 +1,50 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">User Management</h4>
+    <a href="/users/add" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add New User</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th class="pe-4 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(u => { %>
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <img src="/uploads/profiles/<%= u.profileImage %>" class="rounded-circle me-3" width="35" height="35">
+                                    <div>
+                                        <div class="fw-bold"><%= u.name %></div>
+                                        <div class="small text-muted"><%= u.email %></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary"><%= u.role.name %></span></td>
+                            <td>
+                                <span class="badge badge-<%= u.status %> text-capitalize"><%= u.status %></span>
+                            </td>
+                            <td class="small text-muted"><%= new Date(u.createdAt).toLocaleDateString() %></td>
+                            <td class="pe-4 text-end">
+                                <a href="/users/toggle-status/<%= u._id %>" class="btn btn-sm btn-outline-<%= u.status === 'active' ? 'warning' : 'success' %> me-2" title="Toggle Status">
+                                    <i class="fas fa-power-off"></i>
+                                </a>
+                                <a href="/users/delete/<%= u._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this user?')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

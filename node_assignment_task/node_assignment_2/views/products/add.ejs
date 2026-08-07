@@ -1,0 +1,76 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Add New Product</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="/products/add" method="POST" enctype="multipart/form-data">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Product Name</label>
+                            <input type="text" name="name" class="form-control bg-transparent" placeholder="iPhone 15 Pro" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Price ($)</label>
+                            <input type="number" name="price" step="0.01" class="form-control bg-transparent" placeholder="999.00" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Category</label>
+                            <select name="categoryId" class="form-select bg-transparent" id="catSelect" required>
+                                <option value="">Select Category</option>
+                                <% categories.forEach(cat => { %>
+                                    <option value="<%= cat._id %>"><%= cat.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Subcategory</label>
+                            <select name="subcategoryId" class="form-select bg-transparent" id="subSelect" required>
+                                <option value="">Select Subcategory</option>
+                                <% subcategories.forEach(sub => { %>
+                                    <option value="<%= sub._id %>" data-parent="<%= sub.parentId %>" class="sub-opt d-none"><%= sub.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea name="description" class="form-control bg-transparent" rows="3" placeholder="Enter product details..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Product Image</label>
+                        <input type="file" name="productImage" class="form-control bg-transparent" accept="image/*" required>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2">Save Product</button>
+                        <a href="/products" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('catSelect').addEventListener('change', function() {
+        const catId = this.value;
+        const subSelect = document.getElementById('subSelect');
+        const options = subSelect.querySelectorAll('.sub-opt');
+        
+        subSelect.value = "";
+        options.forEach(opt => {
+            if (opt.getAttribute('data-parent') === catId) {
+                opt.classList.remove('d-none');
+            } else {
+                opt.classList.add('d-none');
+            }
+        });
+    });
+</script>

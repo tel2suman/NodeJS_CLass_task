@@ -8,6 +8,7 @@ const authCheck = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer")) {
+      
       return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Authorization token required",
@@ -23,7 +24,7 @@ const authCheck = async (req, res, next) => {
     console.log("Logged in user:", req.user);
 
     next();
-    
+
   } catch (error) {
 
     return res.status(StatusCode.UNAUTHORIZED).json({

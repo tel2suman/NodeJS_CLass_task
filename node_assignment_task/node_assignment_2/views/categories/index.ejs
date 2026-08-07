@@ -1,0 +1,74 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Categories & Subcategories</h4>
+    <a href="/categories/add" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add New</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Categories</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Name</th>
+                                <th>Sub-items</th>
+                                <th class="pe-4 text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% categories.forEach(cat => { %>
+                                <tr>
+                                    <td class="ps-4 fw-bold text-info"><%= cat.name %></td>
+                                    <td><span class="badge bg-secondary"><%= cat.subCount %></span></td>
+                                    <td class="pe-4 text-end">
+                                        <a href="/categories/delete/<%= cat._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deleting a category will delete all its subcategories. Continue?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Subcategories</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Subcategory</th>
+                                <th>Parent Category</th>
+                                <th class="pe-4 text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% subcategories.forEach(sub => { %>
+                                <tr>
+                                    <td class="ps-4"><%= sub.name %></td>
+                                    <td><span class="badge bg-info bg-opacity-10 text-info"><%= sub.parent.name %></span></td>
+                                    <td class="pe-4 text-end">
+                                        <a href="/categories/delete/<%= sub._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this subcategory?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

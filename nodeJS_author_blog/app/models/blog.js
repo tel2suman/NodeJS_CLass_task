@@ -29,6 +29,12 @@ const BlogSchema = new Schema(
       ref: "author",
     },
 
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "category",
+      required: true,
+    },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
